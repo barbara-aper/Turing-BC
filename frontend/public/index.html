@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turing dApp</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+<style>
+  body { font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 16px; }
+  section { border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin: 12px 0; }
+  select, input, button { padding: 8px; margin: 4px 0; font-size: 1em; }
+  li { padding: 4px 0; }
+  #msg { color: #b00; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<h1>Turing</h1>
+<button id="connect">conectar carteira</button>
+<p id="who"></p>
+<p id="msg"></p>
+
+<div id="app" hidden>
+  <section>
+    <h3>votar / emitir</h3>
+    <select id="alvo"></select>
+    <input id="qtde" type="number" min="1" placeholder="qtde de turings">
+    <div>
+      <button id="vote">votar</button>
+      <button id="issue" class="admin">emitir tokens</button>
+    </div>
+  </section>
+
+  <section class="admin">
+    <h3>votação: <span id="status"></span></h3>
+    <button id="on">ligar</button>
+    <button id="off">desligar</button>
+  </section>
+
+  <section>
+    <h3>ranking</h3>
+    <ol id="ranking"></ol>
+  </section>
+</div>
+
+<script>
+// troque pelo endereco impresso no deploy do hardhat
+const ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+
+const ABI = [
+  "function owner() view returns (address)",
+  "function professor() view returns (address)",
+  "function voting() view returns (bool)",
+  "function users(string) view returns (address)",
+  "function users_reverse(address) view returns (string)",
+  "function balanceOf(address) view returns (uint256)",
+  "function getCodinomes() view returns (string[])",
+  "function vote(string, uint256)",
+  "function issueToken(string, uint256)",
+  "function votingOn()",
+  "function votingOff()"
+];
+
+const $ = (id) => document.getElementById(id);
+let contract, profName;
+
+function showError(e) {
+  $("msg").textContent = e.reason || e.shortMessage || e.message;
+}
+
+// executa uma transacao e atualiza a tela quando for minerada
+async function send(fn) {
+  $("msg").textContent = "";
+  try {
+    const tx = await fn();
+    await tx.wait();
+    await refresh();
+  } catch (e) { showError(e); }
+}
+
+async function connect() {
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  await provider.send("eth_requestAccounts", []);
+  const signer = await provider.getSigner();
+  contract = new ethers.Contract(ADDRESS, ABI, signer);
+
+  const me = (await signer.getAddress()).toLowerCase();
+  const [owner, prof] = await Promise.all([contract.owner(), contract.professor()]);
+  const isAdmin = [owner, prof].map(a => a.toLowerCase()).includes(me);
+  const nome = await contract.users_reverse(me);
+  profName = await contract.users_reverse(prof);
+
+  $("who").textContent = `${nome || "(sem codinome)"} ${isAdmin ? "- superusuário" : ""}`;
+  document.querySelectorAll(".admin").forEach(el => el.hidden = !isAdmin);
+  $("app").hidden = false;
+  $("connect").hidden = true;
+
+  await refresh();
+
+  // sem eventos: consulta o contrato a cada 3 segundos
+  setInterval(() => refresh().catch(showError), 3000);
+}
+
+async function refresh() {
+  $("status").textContent = (await contract.voting()) ? "ativa" : "pausada";
+
+  const nomes = await contract.getCodinomes();
+
+  // seletor sem a professora
+  const alunos = nomes.filter(n => n !== profName);
+  const atual = $("alvo").value;
+  $("alvo").innerHTML = alunos.map(n => `<option>${n}</option>`).join("");
+  if (alunos.includes(atual)) $("alvo").value = atual;
+
+  // ranking por saldo
+  const lista = await Promise.all(alunos.map(async n => ({
+    nome: n,
+    saldo: await contract.balanceOf(await contract.users(n))
+  })));
+  lista.sort((a, b) => (b.saldo > a.saldo) - (b.saldo < a.saldo));
+  $("ranking").innerHTML = lista.map(x => `<li>${x.nome}: ${x.saldo} Turing</li>`).join("");
+}
+
+$("connect").onclick = () => connect().catch(showError);
+$("vote").onclick = () => send(() => contract.vote($("alvo").value, $("qtde").value));
+$("issue").onclick = () => send(() => contract.issueToken($("alvo").value, $("qtde").value));
+$("on").onclick = () => send(() => contract.votingOn());
+$("off").onclick = () => send(() => contract.votingOff());
+</script>
+</body>
+</html>
