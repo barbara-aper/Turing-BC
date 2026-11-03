@@ -3,128 +3,516 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>Turing dApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+<script src="config.js"></script>
 <style>
-  body { font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 16px; }
-  section { border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin: 12px 0; }
-  select, input, button { padding: 8px; margin: 4px 0; font-size: 1em; }
-  li { padding: 4px 0; }
-  #msg { color: #b00; min-height: 1.2em; }
+  :root {
+    --navy-950: #061128;
+    --navy-900: #0A1A3A;
+    --navy-800: #102447;
+    --navy-700: #183262;
+    --line: #26457F;
+    --text: #E8EEF9;
+    --muted: #9BB0D3;
+    --accent: #5C9DFF;
+    --accent-ink: #04132E;
+    --gold: #F2C14E;
+    --silver: #C5D3E8;
+    --bronze: #D49366;
+    --ok: #4FD1A5;
+    --bad: #FF8A8A;
+    --radius: 14px;
+    --display: "Sora", "Segoe UI", system-ui, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { background: var(--navy-950); }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: var(--body); font-size: 16px; line-height: 1.5; color: var(--text);
+    background:
+      radial-gradient(1100px 520px at 85% -10%, #17408A55, transparent 70%),
+      linear-gradient(180deg, var(--navy-900), var(--navy-950) 520px);
+    background-attachment: fixed;
+  }
+  h1, h2, h3 { font-family: var(--display); margin: 0; letter-spacing: -0.01em; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- barra superior ---------- */
+  .top {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    max-width: 1080px; margin: 0 auto; padding: 18px 20px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+  .brand svg { display: block; }
+  .brand span { font-family: var(--display); font-weight: 700; font-size: 1.25rem; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--navy-800); color: var(--muted); font-size: .875rem;
+  }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .chip b { color: var(--text); font-weight: 600; }
+
+  /* ---------- botoes ---------- */
+  .btn {
+    border: 1px solid transparent; border-radius: 10px; padding: 10px 18px;
+    font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s, opacity .15s;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover:not(:disabled) { background: #7FB2FF; }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--text); }
+  .btn-ghost:hover:not(:disabled) { background: var(--navy-700); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 8px 20px 56px; }
+
+  /* ---------- tela inicial ---------- */
+  .welcome { padding: 56px 0 24px; max-width: 680px; }
+  .welcome h1 { font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.1; }
+  .welcome p.lead { color: var(--muted); font-size: 1.1rem; margin: 18px 0 28px; max-width: 56ch; }
+  .rules { list-style: none; padding: 0; margin: 36px 0 0; display: grid; gap: 10px; }
+  .rules li {
+    padding: 12px 16px; border-left: 3px solid var(--accent);
+    background: var(--navy-800); border-radius: 0 10px 10px 0; color: var(--muted);
+  }
+  .rules li b { color: var(--text); font-weight: 600; }
+  .form-msg { color: var(--bad); min-height: 1.5em; margin-top: 12px; }
+
+  /* ---------- estatisticas ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 8px 0 20px; }
+  .stat { background: var(--navy-800); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .stat small { display: block; color: var(--muted); font-size: .85rem; }
+  .stat strong { display: block; font-family: var(--display); font-size: 1.9rem; line-height: 1.2; margin-top: 4px; }
+  .stat .sub { color: var(--muted); font-size: .8rem; }
+  .stat.mine { background: linear-gradient(160deg, #1B4A9A, var(--navy-700)); border-color: #3B6FC9; }
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 1rem; font-weight: 600; font-family: var(--body); }
+  .pill.on { background: #4FD1A526; color: var(--ok); }
+  .pill.off { background: #FF8A8A22; color: var(--bad); }
+
+  /* ---------- layout principal ---------- */
+  .grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .col { display: grid; gap: 16px; }
+  .card { background: var(--navy-800); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  .card h2 { font-size: 1.1rem; margin-bottom: 4px; }
+  .card .hint { color: var(--muted); font-size: .9rem; margin: 0 0 16px; }
+
+  /* ---------- ranking ---------- */
+  .rank { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .rank li {
+    display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px; background: var(--navy-900); border: 1px solid transparent;
+  }
+  .rank li.me { border-color: var(--accent); }
+  .pos {
+    width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+    font-family: var(--display); font-weight: 700; background: var(--navy-700); color: var(--muted);
+  }
+  .rank li:nth-child(1) .pos { background: var(--gold); color: #3A2A00; }
+  .rank li:nth-child(2) .pos { background: var(--silver); color: #14233F; }
+  .rank li:nth-child(3) .pos { background: var(--bronze); color: #3A1D08; }
+  .who { min-width: 0; }
+  .who span { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .who span em { font-style: normal; color: var(--accent); font-weight: 500; margin-left: 6px; font-size: .8rem; }
+  .bar { height: 6px; border-radius: 99px; background: var(--navy-700); margin-top: 6px; overflow: hidden; }
+  .bar div { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+  .rank li:nth-child(1) .bar div { background: var(--gold); }
+  .score { font-family: var(--display); font-weight: 700; font-size: 1.15rem; text-align: right; }
+  .score small { display: block; font-family: var(--body); font-weight: 400; font-size: .72rem; color: var(--muted); }
+  .empty { color: var(--muted); padding: 12px 0; }
+
+  /* ---------- formularios ---------- */
+  label.field { display: block; font-size: .9rem; color: var(--muted); margin-bottom: 14px; }
+  label.field > span { display: block; margin-bottom: 6px; }
+  select, input[type=number] {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    background: var(--navy-900); border: 1px solid var(--line); color: var(--text);
+  }
+  select:disabled, input:disabled { opacity: .5; }
+  .seg { display: flex; gap: 8px; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label {
+    flex: 1; text-align: center; padding: 10px 0; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--navy-900); cursor: pointer; font-weight: 600; color: var(--text);
+  }
+  .seg input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .note { min-height: 1.4em; font-size: .88rem; color: var(--muted); margin: 10px 0 0; }
+  .note.warn { color: var(--gold); }
+  .row { display: flex; gap: 8px; }
+  .row .btn { flex: 1; }
+  .btn.full { width: 100%; }
+  .divider { height: 1px; background: var(--line); margin: 18px 0; border: 0; }
+
+  /* ---------- atividade ---------- */
+  .feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .feed li { display: flex; gap: 10px; font-size: .92rem; color: var(--muted); }
+  .feed li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 8px; flex: none; }
+  .feed li b { color: var(--text); font-weight: 600; }
+
+  /* ---------- avisos ---------- */
+  #toasts { position: fixed; right: 16px; bottom: 16px; display: grid; gap: 8px; z-index: 10; max-width: min(380px, calc(100vw - 32px)); }
+  .toast {
+    padding: 12px 16px; border-radius: 10px; background: var(--navy-700); border: 1px solid var(--line);
+    box-shadow: 0 8px 24px #00000066; font-size: .92rem;
+  }
+  .toast.ok { border-color: var(--ok); }
+  .toast.err { border-color: var(--bad); }
+
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
 </style>
 </head>
 <body>
-<h1>Turing</h1>
-<button id="connect">conectar carteira</button>
-<p id="who"></p>
-<p id="msg"></p>
 
-<div id="app" hidden>
-  <section>
-    <h3>votar / emitir</h3>
-    <select id="alvo"></select>
-    <input id="qtde" type="number" min="1" placeholder="qtde de turings">
-    <div>
-      <button id="vote">votar</button>
-      <button id="issue" class="admin">emitir tokens</button>
+<header class="top">
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
+      <rect width="34" height="34" rx="9" fill="#183262"/>
+      <path d="M9 10h16M17 10v15" stroke="#5C9DFF" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+      <circle cx="25" cy="24" r="2.6" fill="#F2C14E"/>
+    </svg>
+    <span>Turing</span>
+  </div>
+  <span class="chip" id="net" hidden><i></i><b id="netName">Hardhat Local</b></span>
+  <span class="chip" id="acct" hidden></span>
+  <button class="btn btn-primary" id="connect" type="button">Conectar carteira</button>
+</header>
+
+<main>
+  <!-- antes de conectar -->
+  <section class="welcome" id="welcome">
+    <h1>Vote nos projetos finais com Turings</h1>
+    <p class="lead">Conecte a MetaMask para ver o ranking da turma, votar nos colegas e acompanhar os Turings em tempo real.</p>
+    <button class="btn btn-primary" id="connect2" type="button">Conectar carteira</button>
+    <p class="form-msg" id="connectMsg" role="alert"></p>
+    <ul class="rules">
+      <li><b>Cada voto vale 1 ou 2 Turings</b> para o colega escolhido.</li>
+      <li><b>Você não pode votar em si mesmo</b> e só pode votar uma vez em cada colega.</li>
+      <li><b>A cada 10 votos que você dá, ganha 1 Turing.</b></li>
+    </ul>
+  </section>
+
+  <!-- depois de conectar -->
+  <div id="app" hidden>
+    <section class="stats" aria-label="Resumo">
+      <div class="stat mine"><small>Seu saldo</small><strong id="stBal">0</strong><span class="sub" id="stName"></span></div>
+      <div class="stat"><small>Votação</small><strong><span class="pill" id="stStatus">-</span></strong></div>
+      <div class="stat"><small>Turings em circulação</small><strong id="stSupply">0</strong></div>
+      <div class="stat"><small>Votos até o seu bônus</small><strong id="stBonus">10</strong><span class="sub">ganha 1 Turing ao chegar a 0</span></div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Ranking</h2>
+        <p class="hint">Ordenado por Turings. A professora não entra na disputa.</p>
+        <ol class="rank" id="ranking"></ol>
+      </section>
+
+      <div class="col">
+        <section class="card" id="voteCard">
+          <h2>Votar</h2>
+          <p class="hint">Escolha um colega e quantos Turings ele recebe.</p>
+          <label class="field"><span>Colega</span><select id="voteTarget"></select></label>
+          <div class="field" style="margin-bottom:14px">
+            <span style="display:block;margin-bottom:6px;color:var(--muted);font-size:.9rem">Quantidade</span>
+            <div class="seg">
+              <input type="radio" name="qtd" id="q1" value="1" checked><label for="q1">1 Turing</label>
+              <input type="radio" name="qtd" id="q2" value="2"><label for="q2">2 Turings</label>
+            </div>
+          </div>
+          <button class="btn btn-primary full" id="vote" type="button">Votar</button>
+          <p class="note" id="voteNote"></p>
+        </section>
+
+        <section class="card admin" id="adminCard">
+          <h2>Painel da professora</h2>
+          <p class="hint">Emita Turings e controle a votação.</p>
+          <label class="field"><span>Aluno</span><select id="issueTarget"></select></label>
+          <label class="field"><span>Quantidade de Turings</span><input id="issueQty" type="number" min="1" step="1" value="1"></label>
+          <button class="btn btn-primary full" id="issue" type="button">Emitir Turings</button>
+          <hr class="divider">
+          <div class="row">
+            <button class="btn btn-ghost" id="on" type="button">Ligar votação</button>
+            <button class="btn btn-ghost" id="off" type="button">Desligar votação</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Atividade recente</h2>
+          <p class="hint">Votos e emissões registrados no contrato.</p>
+          <ul class="feed" id="feed"></ul>
+        </section>
+      </div>
     </div>
-  </section>
+  </div>
+</main>
 
-  <section class="admin">
-    <h3>votação: <span id="status"></span></h3>
-    <button id="on">ligar</button>
-    <button id="off">desligar</button>
-  </section>
-
-  <section>
-    <h3>ranking</h3>
-    <ol id="ranking"></ol>
-  </section>
-</div>
+<div id="toasts" aria-live="polite"></div>
 
 <script>
-// troque pelo endereco impresso no deploy do hardhat
-const ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+const HARDHAT_CHAIN_ID = 31337n;
 
-const ABI = [
+// Se o deploy.js gerar o ABI em config.js ele e usado; senao, vale este.
+const FALLBACK_ABI = [
   "function owner() view returns (address)",
   "function professor() view returns (address)",
   "function voting() view returns (bool)",
   "function users(string) view returns (address)",
   "function users_reverse(address) view returns (string)",
   "function balanceOf(address) view returns (uint256)",
+  "function totalSupply() view returns (uint256)",
+  "function votesCast(address) view returns (uint256)",
+  "function hasVote(string, string) view returns (bool)",
   "function getCodinomes() view returns (string[])",
   "function vote(string, uint256)",
   "function issueToken(string, uint256)",
   "function votingOn()",
-  "function votingOff()"
+  "function votingOff()",
+  "event Voted(string from, string to, uint256 amount)",
+  "event TokenIssued(string codinome, address to, uint256 amount)",
+  "event VoterBonus(string codinome, address to, uint256 amount)"
 ];
+const CONTRACT_ABI = (typeof ABI !== "undefined") ? ABI : FALLBACK_ABI;
 
 const $ = (id) => document.getElementById(id);
-let contract, profName;
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const turings = (n) => (String(n) === "1" ? "1 Turing" : `${n} Turings`);
 
-function showError(e) {
-  $("msg").textContent = e.reason || e.shortMessage || e.message;
+let provider, contract, me, myName = "", isAdmin = false, profName = "", voting = true, timer, busy = false;
+
+/* ---------- avisos ---------- */
+function toast(msg, kind = "", ms = 4500) {
+  const el = document.createElement("div");
+  el.className = "toast " + kind;
+  el.textContent = msg;
+  $("toasts").appendChild(el);
+  setTimeout(() => el.remove(), ms);
+  return el;
 }
 
-// executa uma transacao e atualiza a tela quando for minerada
-async function send(fn) {
-  $("msg").textContent = "";
+function errText(e) {
+  if (e && (e.code === "ACTION_REJECTED" || e.code === 4001)) return "Você cancelou a operação na MetaMask.";
+  return (e && (e.reason || e.shortMessage || e.message)) || "Erro desconhecido.";
+}
+
+function showError(e) {
+  console.error(e);
+  const msg = errText(e);
+  $("connectMsg").textContent = $("app").hidden ? msg : "";
+  toast(msg, "err", 8000);
+}
+
+/* ---------- transacoes ---------- */
+async function send(okMsg, fn) {
+  if (busy) return;
+  busy = true; setBusy(true);
+  const wait = toast("Confirme a transação na MetaMask…", "", 60000);
   try {
     const tx = await fn();
+    wait.textContent = "Transação enviada. Aguardando confirmação…";
     await tx.wait();
+    wait.remove();
+    toast(okMsg, "ok");
     await refresh();
-  } catch (e) { showError(e); }
+  } catch (e) {
+    wait.remove();
+    showError(e);
+  } finally {
+    busy = false; setBusy(false);
+  }
+}
+
+function setBusy(on) {
+  ["vote", "issue", "on", "off"].forEach(id => { $(id).disabled = on || $(id).dataset.lock === "1"; });
+}
+
+/* ---------- conexao ---------- */
+async function ensureHardhatNetwork() {
+  const net = await provider.getNetwork();
+  if (net.chainId === HARDHAT_CHAIN_ID) return;
+  try {
+    await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x7a69" }] });
+  } catch (e) {
+    await window.ethereum.request({
+      method: "wallet_addEthereumChain",
+      params: [{
+        chainId: "0x7a69", chainName: "Hardhat Local",
+        rpcUrls: ["http://127.0.0.1:8545"],
+        nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }
+      }]
+    });
+  }
+  provider = new ethers.BrowserProvider(window.ethereum);
 }
 
 async function connect() {
-  const provider = new ethers.BrowserProvider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  const signer = await provider.getSigner();
-  contract = new ethers.Contract(ADDRESS, ABI, signer);
+  $("connectMsg").textContent = "";
 
-  const me = (await signer.getAddress()).toLowerCase();
+  if (!window.ethereum) {
+    throw new Error("MetaMask não encontrada. Instale a extensão e abra a página por http://localhost (não por file://).");
+  }
+  if (typeof ADDRESS === "undefined") {
+    throw new Error("config.js não encontrado. Rode o deploy: npx hardhat run scripts/deploy.js --network localhost");
+  }
+
+  provider = new ethers.BrowserProvider(window.ethereum);
+  await provider.send("eth_requestAccounts", []);
+  await ensureHardhatNetwork();
+
+  if ((await provider.getCode(ADDRESS)) === "0x") {
+    throw new Error("Não há contrato em " + ADDRESS + ". Reiniciou o hardhat node? Rode o deploy de novo.");
+  }
+
+  const signer = await provider.getSigner();
+  contract = new ethers.Contract(ADDRESS, CONTRACT_ABI, signer);
+  me = (await signer.getAddress()).toLowerCase();
+
   const [owner, prof] = await Promise.all([contract.owner(), contract.professor()]);
-  const isAdmin = [owner, prof].map(a => a.toLowerCase()).includes(me);
-  const nome = await contract.users_reverse(me);
+  isAdmin = [owner, prof].map(a => a.toLowerCase()).includes(me);
+  myName = await contract.users_reverse(me);
   profName = await contract.users_reverse(prof);
 
-  $("who").textContent = `${nome || "(sem codinome)"} ${isAdmin ? "- superusuário" : ""}`;
-  document.querySelectorAll(".admin").forEach(el => el.hidden = !isAdmin);
-  $("app").hidden = false;
+  $("acct").hidden = false;
+  $("acct").innerHTML = `<b>${esc(myName || "sem codinome")}</b> ${me.slice(0, 6)}…${me.slice(-4)}` + (isAdmin ? " · superusuário" : "");
+  $("net").hidden = false;
+  $("stName").textContent = myName ? myName : "conta não cadastrada";
+  $("adminCard").hidden = !isAdmin;
   $("connect").hidden = true;
+  $("welcome").hidden = true;
+  $("app").hidden = false;
 
   await refresh();
+  clearInterval(timer);
+  timer = setInterval(() => refresh().catch(showError), 3000);
+}
 
-  // sem eventos: consulta o contrato a cada 3 segundos
-  setInterval(() => refresh().catch(showError), 3000);
+/* ---------- atualizacao da tela ---------- */
+function setOptions(sel, list) {
+  const key = list.join("|");
+  if (sel.dataset.key === key) return;
+  const atual = sel.value;
+  sel.innerHTML = list.map(n => `<option>${esc(n)}</option>`).join("");
+  if (list.includes(atual)) sel.value = atual;
+  sel.dataset.key = key;
 }
 
 async function refresh() {
-  $("status").textContent = (await contract.voting()) ? "ativa" : "pausada";
+  const [vOn, nomes, supply, myBal, myVotes] = await Promise.all([
+    contract.voting(), contract.getCodinomes(), contract.totalSupply(),
+    contract.balanceOf(me), contract.votesCast(me)
+  ]);
+  voting = vOn;
 
-  const nomes = await contract.getCodinomes();
+  $("stBal").textContent = myBal.toString();
+  $("stSupply").textContent = supply.toString();
+  $("stBonus").textContent = String(10 - Number(myVotes % 10n));
+  const pill = $("stStatus");
+  pill.textContent = voting ? "Ativa" : "Pausada";
+  pill.className = "pill " + (voting ? "on" : "off");
 
-  // seletor sem a professora
   const alunos = nomes.filter(n => n !== profName);
-  const atual = $("alvo").value;
-  $("alvo").innerHTML = alunos.map(n => `<option>${n}</option>`).join("");
-  if (alunos.includes(atual)) $("alvo").value = atual;
+  setOptions($("voteTarget"), alunos.filter(n => n !== myName));
+  setOptions($("issueTarget"), alunos);
 
-  // ranking por saldo
   const lista = await Promise.all(alunos.map(async n => ({
-    nome: n,
-    saldo: await contract.balanceOf(await contract.users(n))
+    nome: n, saldo: await contract.balanceOf(await contract.users(n))
   })));
   lista.sort((a, b) => (b.saldo > a.saldo) - (b.saldo < a.saldo));
-  $("ranking").innerHTML = lista.map(x => `<li>${x.nome}: ${x.saldo} Turing</li>`).join("");
+  renderRanking(lista);
+
+  await updateVoteState();
+  await renderFeed();
 }
 
-$("connect").onclick = () => connect().catch(showError);
-$("vote").onclick = () => send(() => contract.vote($("alvo").value, $("qtde").value));
-$("issue").onclick = () => send(() => contract.issueToken($("alvo").value, $("qtde").value));
-$("on").onclick = () => send(() => contract.votingOn());
-$("off").onclick = () => send(() => contract.votingOff());
+function renderRanking(lista) {
+  if (!lista.length) { $("ranking").innerHTML = `<li class="empty">Nenhum aluno cadastrado.</li>`; return; }
+  const max = lista.reduce((m, x) => (x.saldo > m ? x.saldo : m), 1n);
+  $("ranking").innerHTML = lista.map((x, i) => {
+    const pct = Number((x.saldo * 100n) / max);
+    const eu = x.nome === myName;
+    return `<li class="${eu ? "me" : ""}">
+      <div class="pos">${i + 1}</div>
+      <div class="who"><span>${esc(x.nome)}${eu ? "<em>você</em>" : ""}</span><div class="bar"><div style="width:${pct}%"></div></div></div>
+      <div class="score">${x.saldo}<small>${x.saldo === 1n ? "Turing" : "Turings"}</small></div>
+    </li>`;
+  }).join("");
+}
+
+async function updateVoteState() {
+  const target = $("voteTarget").value;
+  const btn = $("vote"), note = $("voteNote");
+  let msg = "", warn = false, lock = false;
+
+  if (!myName) { msg = "Esta conta não está autorizada a votar."; warn = true; lock = true; }
+  else if (!voting) { msg = "A votação está pausada."; warn = true; lock = true; }
+  else if (!target) { msg = "Nenhum colega disponível."; lock = true; }
+  else if (await contract.hasVote(myName, target)) { msg = `Você já votou em ${target}.`; warn = true; lock = true; }
+
+  note.textContent = msg;
+  note.className = "note" + (warn ? " warn" : "");
+  btn.dataset.lock = lock ? "1" : "0";
+  btn.disabled = busy || lock;
+  $("vote").hidden = false;
+}
+
+async function renderFeed() {
+  try {
+    const [v, t, b] = await Promise.all([
+      contract.queryFilter("Voted", 0, "latest"),
+      contract.queryFilter("TokenIssued", 0, "latest"),
+      contract.queryFilter("VoterBonus", 0, "latest")
+    ]);
+    const itens = [...v, ...t, ...b]
+      .sort((x, y) => (y.blockNumber - x.blockNumber) || (y.index - x.index))
+      .slice(0, 8)
+      .map(ev => {
+        const a = ev.args;
+        if (ev.fragment.name === "Voted") return `<b>${esc(a.from)}</b> deu ${turings(a.amount)} a <b>${esc(a.to)}</b>`;
+        if (ev.fragment.name === "TokenIssued") return `<b>${esc(a.codinome)}</b> recebeu ${turings(a.amount)} emitidos`;
+        return `<b>${esc(a.codinome)}</b> ganhou ${turings(a.amount)} de bônus por 10 votos`;
+      });
+    $("feed").innerHTML = itens.length
+      ? itens.map(t => `<li><span>${t}</span></li>`).join("")
+      : `<li class="empty" style="display:block">Nada por aqui ainda. O primeiro voto aparece nesta lista.</li>`;
+  } catch (e) { console.warn("Não foi possível ler os eventos", e); }
+}
+
+/* ---------- acoes ---------- */
+$("connect").onclick = $("connect2").onclick = () => connect().catch(showError);
+
+$("vote").onclick = () => {
+  const qtd = document.querySelector('input[name="qtd"]:checked').value;
+  const alvo = $("voteTarget").value;
+  send(`Voto registrado: ${turings(qtd)} para ${alvo}.`, () => contract.vote(alvo, qtd));
+};
+
+$("issue").onclick = () => {
+  const alvo = $("issueTarget").value, qtd = $("issueQty").value;
+  if (!alvo || !(Number(qtd) >= 1)) { toast("Escolha um aluno e uma quantidade maior que 0.", "err"); return; }
+  send(`${turings(qtd)} emitidos para ${alvo}.`, () => contract.issueToken(alvo, qtd));
+};
+
+$("on").onclick = () => send("Votação ligada.", () => contract.votingOn());
+$("off").onclick = () => send("Votação desligada.", () => contract.votingOff());
+$("voteTarget").onchange = () => updateVoteState().catch(showError);
+
+if (window.ethereum) {
+  window.ethereum.on("accountsChanged", () => location.reload());
+  window.ethereum.on("chainChanged", () => location.reload());
+}
 </script>
 </body>
 </html>
