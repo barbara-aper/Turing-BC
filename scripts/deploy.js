@@ -32,7 +32,7 @@ async function main() {
 
 // Grava o endereco em frontend/config.js (lido pelo index.html)
 function saveFrontendConfig(address) {
-  const dir = path.join(__dirname, "..", "frontend");
+  const dir = path.join(__dirname, "..", "frontend", "public");
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(
     path.join(dir, "config.js"),
