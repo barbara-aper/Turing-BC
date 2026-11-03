@@ -1,56 +1,44 @@
-// This is a script for deploying your contracts. You can adapt it to deploy
-// yours, or create new ones.
-
+// Deploy do contrato Turing (ethers v6, hardhat-toolbox 6).
+// Uso:  npx hardhat run scripts/deploy.js --network localhost
+const fs = require("fs");
 const path = require("path");
+const hre = require("hardhat");
 
 async function main() {
-  // This is just a convenience check
+  const { ethers, network } = hre;
+
   if (network.name === "hardhat") {
     console.warn(
-      "You are trying to deploy a contract to the Hardhat Network, which" +
-        "gets automatically created and destroyed every time. Use the Hardhat" +
-        " option '--network localhost'"
+      "Voce esta fazendo deploy na rede interna do Hardhat (some ao fim do script).\n" +
+        "Use: npx hardhat run scripts/deploy.js --network localhost"
     );
   }
 
-  // ethers is available in the global scope
   const [deployer] = await ethers.getSigners();
-  console.log(
-    "Deploying the contracts with the account:",
-    await deployer.getAddress()
-  );
+  console.log("Deploy com a conta:", deployer.address);
 
-  console.log("Account balance:", (await deployer.getBalance()).toString());
+  const saldo = await ethers.provider.getBalance(deployer.address);
+  console.log("Saldo:", ethers.formatEther(saldo), "ETH");
 
-  const Token = await ethers.getContractFactory("Turing");
-  const token = await Token.deploy();
-  await token.deployed();
+  const Turing = await ethers.getContractFactory("Turing");
+  const turing = await Turing.deploy();
+  await turing.waitForDeployment();
 
-  console.log("Token address:", token.address);
+  const address = await turing.getAddress();
+  console.log("Turing implantado em:", address);
 
-  // We also save the contract's artifacts and address in the frontend directory
-  saveFrontendFiles(token);
+  saveFrontendConfig(address);
 }
 
-function saveFrontendFiles(token) {
-  const fs = require("fs");
-  const contractsDir = path.join(__dirname, "..", "frontend", "src", "contracts");
-
-  if (!fs.existsSync(contractsDir)) {
-    fs.mkdirSync(contractsDir);
-  }
-
+// Grava o endereco em frontend/config.js (lido pelo index.html)
+function saveFrontendConfig(address) {
+  const dir = path.join(__dirname, "..", "frontend");
+  fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(
-    path.join(contractsDir, "contract-address.json"),
-    JSON.stringify({ Token: token.address }, undefined, 2)
+    path.join(dir, "config.js"),
+    `// gerado por scripts/deploy.js - nao edite\nconst ADDRESS = "${address}";\n`
   );
-
-  const TokenArtifact = artifacts.readArtifactSync("Turing");
-
-  fs.writeFileSync(
-    path.join(contractsDir, "Token.json"),
-    JSON.stringify(TokenArtifact, null, 2)
-  );
+  console.log("Endereco salvo em frontend/config.js");
 }
 
 main()
