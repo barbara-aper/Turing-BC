@@ -3,516 +3,339 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
 <title>Turing dApp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
 <script src="config.js"></script>
 <style>
-  :root {
-    --navy-950: #061128;
-    --navy-900: #0A1A3A;
-    --navy-800: #102447;
-    --navy-700: #183262;
-    --line: #26457F;
-    --text: #E8EEF9;
-    --muted: #9BB0D3;
-    --accent: #5C9DFF;
-    --accent-ink: #04132E;
-    --gold: #F2C14E;
-    --silver: #C5D3E8;
-    --bronze: #D49366;
-    --ok: #4FD1A5;
-    --bad: #FF8A8A;
-    --radius: 14px;
-    --display: "Sora", "Segoe UI", system-ui, sans-serif;
-    --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  }
-  * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
-  html { background: var(--navy-950); }
-  body {
-    margin: 0; min-height: 100vh;
-    font-family: var(--body); font-size: 16px; line-height: 1.5; color: var(--text);
-    background:
-      radial-gradient(1100px 520px at 85% -10%, #17408A55, transparent 70%),
-      linear-gradient(180deg, var(--navy-900), var(--navy-950) 520px);
-    background-attachment: fixed;
-  }
-  h1, h2, h3 { font-family: var(--display); margin: 0; letter-spacing: -0.01em; }
-  button, input, select { font: inherit; color: inherit; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:root{--navy:#0A2A66;--deep:#061A45;--cobalt:#0B4DA2;--red:#E02B27;--leaf:#4E8F3C;--green:#2F7D32;--lime:#EEFB6E;--butter:#FFF07A;--cream:#FFF6DE;--ink:#0B1B3F;
+--display:"Anton","Impact","Arial Narrow",sans-serif;--fun:"DM Sans","Segoe UI",system-ui,sans-serif;--body:"DM Sans","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{background:var(--navy)}
+body{margin:0;min-height:100vh;overflow-x:hidden;font:16px/1.5 var(--body);color:var(--cream);background:radial-gradient(900px 500px at 90% -5%,#1A57B8 0,transparent 70%),var(--navy)}
+:focus-visible{outline:3px solid var(--butter);outline-offset:2px}
+.big{font-family:var(--display);text-transform:uppercase;line-height:.92;font-weight:400;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+svg.t{display:block}
 
-  /* ---------- barra superior ---------- */
-  .top {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    max-width: 1080px; margin: 0 auto; padding: 18px 20px;
-  }
-  .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
-  .brand svg { display: block; }
-  .brand span { font-family: var(--display); font-weight: 700; font-size: 1.25rem; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
-    background: var(--navy-800); color: var(--muted); font-size: .875rem;
-  }
-  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
-  .chip b { color: var(--text); font-weight: 600; }
+/* topo */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 0}
+.brand{display:flex;align-items:center;gap:8px;margin-right:auto;font-family:var(--display);font-size:2rem;letter-spacing:.02em}
+.brand svg{width:38px;height:38px}
+.chip{font-family:var(--fun);font-size:.95rem;padding:5px 14px;border-radius:999px;background:var(--butter);color:var(--red);border:2.5px solid var(--red);transform:rotate(-2deg)}
+.chip+.chip{transform:rotate(1.5deg)}
+.btn{font-family:var(--fun);font-size:1.1rem;letter-spacing:.02em;border:3px solid var(--ink);border-radius:12px;padding:10px 20px;background:var(--red);color:var(--cream);cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .1s,box-shadow .1s}
+.btn:hover:not(:disabled){transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.alt{background:var(--cream);color:var(--ink)}
+.btn.green{background:var(--green)}
 
-  /* ---------- botoes ---------- */
-  .btn {
-    border: 1px solid transparent; border-radius: 10px; padding: 10px 18px;
-    font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s, opacity .15s;
-  }
-  .btn-primary { background: var(--accent); color: var(--accent-ink); }
-  .btn-primary:hover:not(:disabled) { background: #7FB2FF; }
-  .btn-ghost { background: transparent; border-color: var(--line); color: var(--text); }
-  .btn-ghost:hover:not(:disabled) { background: var(--navy-700); }
-  .btn:disabled { opacity: .45; cursor: not-allowed; }
+/* poster inicial */
+.poster{position:relative;margin-top:30px;height:clamp(360px,62vw,470px);background:var(--cobalt);border-radius:6px}
+.poster h1{position:absolute;left:0;right:0;top:-.34em;font-size:clamp(4.2rem,17vw,11rem);text-align:right;color:var(--cream);z-index:1;letter-spacing:-.01em}
+.poster svg{position:absolute;z-index:2}
+.strip{display:flex;justify-content:space-between;gap:8px;margin-top:22px;padding:8px 16px;border:2.5px solid var(--cream);font-family:var(--display);letter-spacing:.08em;text-transform:uppercase;font-size:clamp(.8rem,2.6vw,1.1rem)}
+.welcome .cols{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;margin:26px 0 50px;align-items:end}
+.welcome p{margin:0 0 12px;max-width:46ch}
+.welcome .rules b{color:var(--butter)}
+.cta .big{font-size:clamp(3.4rem,11vw,6.4rem)}
+.cta small{display:block;font-family:var(--fun);font-size:1.15rem;margin-bottom:6px}
+.cta .arrow{width:72px;height:auto;margin:2px 0 8px 36px}
+.form-msg{color:var(--butter);min-height:1.5em;margin:10px 0 0;font-weight:500}
 
-  main { max-width: 1080px; margin: 0 auto; padding: 8px 20px 56px; }
+/* app */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:12px 0 24px;align-items:center}
+.sticker{background:var(--butter);color:var(--red);border:3px solid var(--red);border-radius:999px;padding:14px 22px;text-align:center;transform:rotate(-1.5deg)}
+.sticker:nth-child(3){transform:rotate(1.5deg)}
+.sticker small{display:block;font-family:var(--fun);font-size:.9rem;color:var(--ink)}
+.sticker b{display:block;font-family:var(--display);font-weight:400;font-size:2.8rem;line-height:1.05}
+.sticker.mine{background:var(--red);color:var(--cream);border-color:var(--ink)}.sticker.mine small{color:var(--butter)}
+.burst{width:140px;height:140px;margin:0 auto;display:grid;place-content:center;text-align:center;clip-path:polygon(100.0% 50.0%,90.5% 56.4%,97.6% 65.5%,86.5% 68.6%,90.5% 79.4%,79.0% 79.0%,79.4% 90.5%,68.6% 86.5%,65.5% 97.6%,56.4% 90.5%,50.0% 100.0%,43.6% 90.5%,34.5% 97.6%,31.4% 86.5%,20.6% 90.5%,21.0% 79.0%,9.5% 79.4%,13.5% 68.6%,2.4% 65.5%,9.5% 56.4%,0.0% 50.0%,9.5% 43.6%,2.4% 34.5%,13.5% 31.4%,9.5% 20.6%,21.0% 21.0%,20.6% 9.5%,31.4% 13.5%,34.5% 2.4%,43.6% 9.5%,50.0% 0.0%,56.4% 9.5%,65.5% 2.4%,68.6% 13.5%,79.4% 9.5%,79.0% 21.0%,90.5% 20.6%,86.5% 31.4%,97.6% 34.5%,90.5% 43.6%);background:var(--butter);transform:rotate(8deg);font-family:var(--fun);line-height:1.1}
+.burst small{font-size:.8rem;color:var(--ink)}.burst b{font-size:1.35rem;font-weight:400}
+.burst.on b{color:var(--green)}.burst.off{background:#FFC9C0}.burst.off b{color:var(--red)}
+.grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;align-items:start;padding-bottom:60px}
+.col{display:grid;gap:22px}
+.card{border-radius:18px;padding:22px;box-shadow:7px 7px 0 var(--deep)}
+.card h2{font-size:clamp(2.4rem,6vw,3.4rem);margin-bottom:6px}
+.card .hint{margin:0 0 16px;font-size:.95rem;opacity:.85}
+.paper{background:var(--cream);color:var(--ink)}.paper h2{color:var(--red)}
 
-  /* ---------- tela inicial ---------- */
-  .welcome { padding: 56px 0 24px; max-width: 680px; }
-  .welcome h1 { font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.1; }
-  .welcome p.lead { color: var(--muted); font-size: 1.1rem; margin: 18px 0 28px; max-width: 56ch; }
-  .rules { list-style: none; padding: 0; margin: 36px 0 0; display: grid; gap: 10px; }
-  .rules li {
-    padding: 12px 16px; border-left: 3px solid var(--accent);
-    background: var(--navy-800); border-radius: 0 10px 10px 0; color: var(--muted);
-  }
-  .rules li b { color: var(--text); font-weight: 600; }
-  .form-msg { color: var(--bad); min-height: 1.5em; margin-top: 12px; }
+.rank{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rank li{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 12px;border-radius:14px;border:2.5px solid transparent;background:#FFEBC4}
+.rank li.top{background:var(--butter)}.rank li.me{border-color:var(--ink)}
+.pos{position:relative;width:46px;height:46px}.pos svg{width:100%;height:100%}
+.pos b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:400;font-size:1.25rem;color:var(--cream);padding-top:3px}
+.nm strong{display:block;font-family:var(--display);font-weight:400;font-size:1.45rem;letter-spacing:.02em;text-transform:uppercase;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm em{font-style:normal;font-family:var(--fun);font-size:.8rem;color:var(--cream);background:var(--red);border-radius:99px;padding:1px 9px;margin-left:8px;vertical-align:middle}
+.bar{height:9px;border-radius:99px;background:#0B1B3F22;margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--red);border-radius:99px;transition:width .4s}
+.sc{font-family:var(--display);font-size:2.2rem;line-height:1;text-align:right;color:var(--red)}.sc small{display:block;font-family:var(--fun);font-size:.72rem;color:var(--ink)}
+.empty{color:#0B1B3F99;padding:8px 0}
 
-  /* ---------- estatisticas ---------- */
-  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 8px 0 20px; }
-  .stat { background: var(--navy-800); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
-  .stat small { display: block; color: var(--muted); font-size: .85rem; }
-  .stat strong { display: block; font-family: var(--display); font-size: 1.9rem; line-height: 1.2; margin-top: 4px; }
-  .stat .sub { color: var(--muted); font-size: .8rem; }
-  .stat.mine { background: linear-gradient(160deg, #1B4A9A, var(--navy-700)); border-color: #3B6FC9; }
-  .pill { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 1rem; font-weight: 600; font-family: var(--body); }
-  .pill.on { background: #4FD1A526; color: var(--ok); }
-  .pill.off { background: #FF8A8A22; color: var(--bad); }
+.vote{background:var(--cobalt)}.vote h2{color:var(--cream)}
+.vote .arrow{position:absolute;right:28px;top:16px;width:60px;height:auto}
+.vote{position:relative}
+label.field,.lab{display:block;font-family:var(--fun);font-size:.95rem;margin-bottom:14px}
+label.field>span,.lab>span{display:block;margin-bottom:5px}
+select,input[type=number]{width:100%;padding:11px 12px;border:3px solid var(--ink);border-radius:12px;background:var(--cream);color:var(--ink);font:500 1rem var(--body)}
+.seg{display:flex;gap:10px}.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;border:3px solid var(--ink);border-radius:12px;background:var(--cream);color:var(--ink);font-family:var(--fun);font-size:1.15rem;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.seg label svg{width:22px;height:22px}
+.seg input:checked+label{background:var(--red);color:var(--cream)}
+.seg input:focus-visible+label{outline:3px solid var(--butter);outline-offset:2px}
+.note{min-height:1.4em;margin:12px 0 0;font-weight:500;color:var(--butter)}
+.vote .btn.full,.btn.full{width:100%;font-size:1.4rem}
 
-  /* ---------- layout principal ---------- */
-  .grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-  .col { display: grid; gap: 16px; }
-  .card { background: var(--navy-800); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
-  .card h2 { font-size: 1.1rem; margin-bottom: 4px; }
-  .card .hint { color: var(--muted); font-size: .9rem; margin: 0 0 16px; }
+.lime{background:var(--lime);color:var(--green);border:3px solid var(--green)}.lime h2{color:var(--green)}
+.lime label.field{color:var(--green)}.lime select,.lime input{border-color:var(--green)}
+.row{display:flex;gap:10px;margin-top:16px}.row .btn{flex:1;font-size:1rem;padding:10px 6px;box-shadow:3px 3px 0 var(--green);border-color:var(--green)}
+.lime .btn.full{border-color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.feed{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.feed li{display:flex;gap:10px;font-size:.95rem}
+.feed li::before{content:"";flex:none;width:11px;height:11px;margin-top:7px;border-radius:50%;background:var(--red)}
+#toasts{position:fixed;right:16px;bottom:16px;display:grid;gap:8px;z-index:10;max-width:min(380px,calc(100vw - 32px))}
+.toast{padding:12px 16px;border-radius:12px;background:var(--butter);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);font-weight:500}
+.toast.err{background:#FFC9C0;border-color:var(--red)}.toast.ok{background:var(--lime);border-color:var(--green)}
+@media(max-width:860px){.grid,.welcome .cols{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
-  /* ---------- ranking ---------- */
-  .rank { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-  .rank li {
-    display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 12px;
-    padding: 10px 12px; border-radius: 10px; background: var(--navy-900); border: 1px solid transparent;
-  }
-  .rank li.me { border-color: var(--accent); }
-  .pos {
-    width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
-    font-family: var(--display); font-weight: 700; background: var(--navy-700); color: var(--muted);
-  }
-  .rank li:nth-child(1) .pos { background: var(--gold); color: #3A2A00; }
-  .rank li:nth-child(2) .pos { background: var(--silver); color: #14233F; }
-  .rank li:nth-child(3) .pos { background: var(--bronze); color: #3A1D08; }
-  .who { min-width: 0; }
-  .who span { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .who span em { font-style: normal; color: var(--accent); font-weight: 500; margin-left: 6px; font-size: .8rem; }
-  .bar { height: 6px; border-radius: 99px; background: var(--navy-700); margin-top: 6px; overflow: hidden; }
-  .bar div { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
-  .rank li:nth-child(1) .bar div { background: var(--gold); }
-  .score { font-family: var(--display); font-weight: 700; font-size: 1.15rem; text-align: right; }
-  .score small { display: block; font-family: var(--body); font-weight: 400; font-size: .72rem; color: var(--muted); }
-  .empty { color: var(--muted); padding: 12px 0; }
-
-  /* ---------- formularios ---------- */
-  label.field { display: block; font-size: .9rem; color: var(--muted); margin-bottom: 14px; }
-  label.field > span { display: block; margin-bottom: 6px; }
-  select, input[type=number] {
-    width: 100%; padding: 10px 12px; border-radius: 10px;
-    background: var(--navy-900); border: 1px solid var(--line); color: var(--text);
-  }
-  select:disabled, input:disabled { opacity: .5; }
-  .seg { display: flex; gap: 8px; }
-  .seg input { position: absolute; opacity: 0; pointer-events: none; }
-  .seg label {
-    flex: 1; text-align: center; padding: 10px 0; border: 1px solid var(--line); border-radius: 10px;
-    background: var(--navy-900); cursor: pointer; font-weight: 600; color: var(--text);
-  }
-  .seg input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .note { min-height: 1.4em; font-size: .88rem; color: var(--muted); margin: 10px 0 0; }
-  .note.warn { color: var(--gold); }
-  .row { display: flex; gap: 8px; }
-  .row .btn { flex: 1; }
-  .btn.full { width: 100%; }
-  .divider { height: 1px; background: var(--line); margin: 18px 0; border: 0; }
-
-  /* ---------- atividade ---------- */
-  .feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-  .feed li { display: flex; gap: 10px; font-size: .92rem; color: var(--muted); }
-  .feed li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 8px; flex: none; }
-  .feed li b { color: var(--text); font-weight: 600; }
-
-  /* ---------- avisos ---------- */
-  #toasts { position: fixed; right: 16px; bottom: 16px; display: grid; gap: 8px; z-index: 10; max-width: min(380px, calc(100vw - 32px)); }
-  .toast {
-    padding: 12px 16px; border-radius: 10px; background: var(--navy-700); border: 1px solid var(--line);
-    box-shadow: 0 8px 24px #00000066; font-size: .92rem;
-  }
-  .toast.ok { border-color: var(--ok); }
-  .toast.err { border-color: var(--bad); }
-
-  @media (max-width: 860px) {
-    .grid { grid-template-columns: 1fr; }
-    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; }
-  }
+/* refinamento: planos, sem sombras, tipografia limpa (estilo adesivo plano) */
+.chip,.btn,.sticker small,.burst small,.seg label,label.field,.lab,.nm em,.sc small,.cta small{font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.btn{font-size:.82rem;border:0;border-radius:999px;padding:13px 28px;box-shadow:none;transition:background .15s}
+.btn:hover:not(:disabled){transform:none;box-shadow:none;background:#F0453F}
+.btn.alt{background:transparent;color:var(--green);border:2px solid var(--green)}
+.btn.alt:hover:not(:disabled){background:#2F7D3222}
+.btn.green:hover:not(:disabled){background:#3A9140}
+.btn.full{font-size:.9rem;padding:14px}
+.row .btn{font-size:.74rem;padding:12px 6px;box-shadow:none;border:2px solid var(--green)}
+.lime .btn.full{border:0;box-shadow:none}
+.card{box-shadow:none;border-radius:22px}
+.chip{font-size:.7rem;padding:6px 14px;border-width:2px;transform:none!important}
+.sticker,.sticker:nth-child(3){transform:none;border-width:2px}
+.sticker small{font-size:.68rem}.sticker.mine{border-color:var(--red)}
+.burst{width:auto;height:auto;clip-path:none;transform:none;margin:0;display:block;padding:14px 22px;border-radius:999px;border:2px solid var(--green);text-align:center}
+.burst small{display:block;font-size:.68rem}.burst b{display:block;font-family:var(--display);font-size:2.8rem;line-height:1.05;font-weight:400}
+.burst.off{border-color:var(--red)}
+.seg label{border:2px solid var(--cream);box-shadow:none;font-size:.85rem;background:transparent;color:var(--cream)}
+.seg input:checked+label{background:var(--red);border-color:var(--red);color:var(--cream)}
+label.field,.lab{font-size:.7rem}
+select,input[type=number]{border:2px solid var(--ink);border-radius:999px;padding:12px 18px}
+.nm em{font-size:.6rem;padding:2px 9px}.sc small{font-size:.6rem}
+.cta small{font-size:.8rem;margin-bottom:4px}
+.strip{border-width:1.5px;font-family:var(--body);font-weight:700;letter-spacing:.14em;font-size:clamp(.6rem,2vw,.78rem)}
+.toast{box-shadow:none;border-width:2px}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="tom" viewBox="0 0 100 100"><path d="M50 10C74 6 95 24 93 50 91 78 71 95 47 93 23 91 7 72 9 46 11 24 27 12 50 10Z" fill="#E02B27"/><polygon fill="#4E7D3A" points="50,27 56,42 72,37 62,50 71,64 55,58 49,73 44,58 28,64 37,50 27,38 43,42"/></symbol>
+  <symbol id="arr" viewBox="0 0 110 100"><path d="M10 10C80 0 100 40 62 78M62 78l18-2M62 78l2-18" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
 
+<div class="wrap">
 <header class="top">
-  <div class="brand">
-    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
-      <rect width="34" height="34" rx="9" fill="#183262"/>
-      <path d="M9 10h16M17 10v15" stroke="#5C9DFF" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-      <circle cx="25" cy="24" r="2.6" fill="#F2C14E"/>
-    </svg>
-    <span>Turing</span>
-  </div>
-  <span class="chip" id="net" hidden><i></i><b id="netName">Hardhat Local</b></span>
+  <div class="brand"><svg class="t" viewBox="0 0 100 100"><use href="#tom"/></svg>Turing.</div>
+  <span class="chip" id="net" hidden><span id="netName">Hardhat Local</span></span>
   <span class="chip" id="acct" hidden></span>
-  <button class="btn btn-primary" id="connect" type="button">Conectar carteira</button>
+  <button class="btn" id="connect" type="button">Conectar carteira</button>
 </header>
 
-<main>
-  <!-- antes de conectar -->
-  <section class="welcome" id="welcome">
-    <h1>Vote nos projetos finais com Turings</h1>
-    <p class="lead">Conecte a MetaMask para ver o ranking da turma, votar nos colegas e acompanhar os Turings em tempo real.</p>
-    <button class="btn btn-primary" id="connect2" type="button">Conectar carteira</button>
-    <p class="form-msg" id="connectMsg" role="alert"></p>
-    <ul class="rules">
-      <li><b>Cada voto vale 1 ou 2 Turings</b> para o colega escolhido.</li>
-      <li><b>Você não pode votar em si mesmo</b> e só pode votar uma vez em cada colega.</li>
-      <li><b>A cada 10 votos que você dá, ganha 1 Turing.</b></li>
-    </ul>
-  </section>
-
-  <!-- depois de conectar -->
-  <div id="app" hidden>
-    <section class="stats" aria-label="Resumo">
-      <div class="stat mine"><small>Seu saldo</small><strong id="stBal">0</strong><span class="sub" id="stName"></span></div>
-      <div class="stat"><small>Votação</small><strong><span class="pill" id="stStatus">-</span></strong></div>
-      <div class="stat"><small>Turings em circulação</small><strong id="stSupply">0</strong></div>
-      <div class="stat"><small>Votos até o seu bônus</small><strong id="stBonus">10</strong><span class="sub">ganha 1 Turing ao chegar a 0</span></div>
-    </section>
-
-    <div class="grid">
-      <section class="card">
-        <h2>Ranking</h2>
-        <p class="hint">Ordenado por Turings. A professora não entra na disputa.</p>
-        <ol class="rank" id="ranking"></ol>
-      </section>
-
-      <div class="col">
-        <section class="card" id="voteCard">
-          <h2>Votar</h2>
-          <p class="hint">Escolha um colega e quantos Turings ele recebe.</p>
-          <label class="field"><span>Colega</span><select id="voteTarget"></select></label>
-          <div class="field" style="margin-bottom:14px">
-            <span style="display:block;margin-bottom:6px;color:var(--muted);font-size:.9rem">Quantidade</span>
-            <div class="seg">
-              <input type="radio" name="qtd" id="q1" value="1" checked><label for="q1">1 Turing</label>
-              <input type="radio" name="qtd" id="q2" value="2"><label for="q2">2 Turings</label>
-            </div>
-          </div>
-          <button class="btn btn-primary full" id="vote" type="button">Votar</button>
-          <p class="note" id="voteNote"></p>
-        </section>
-
-        <section class="card admin" id="adminCard">
-          <h2>Painel da professora</h2>
-          <p class="hint">Emita Turings e controle a votação.</p>
-          <label class="field"><span>Aluno</span><select id="issueTarget"></select></label>
-          <label class="field"><span>Quantidade de Turings</span><input id="issueQty" type="number" min="1" step="1" value="1"></label>
-          <button class="btn btn-primary full" id="issue" type="button">Emitir Turings</button>
-          <hr class="divider">
-          <div class="row">
-            <button class="btn btn-ghost" id="on" type="button">Ligar votação</button>
-            <button class="btn btn-ghost" id="off" type="button">Desligar votação</button>
-          </div>
-        </section>
-
-        <section class="card">
-          <h2>Atividade recente</h2>
-          <p class="hint">Votos e emissões registrados no contrato.</p>
-          <ul class="feed" id="feed"></ul>
-        </section>
-      </div>
+<section class="welcome" id="welcome">
+  <div class="poster">
+    <h1 class="big">Turings.</h1>
+    <svg class="t" viewBox="0 0 100 100" style="left:-4%;top:14%;width:34%;transform:rotate(-14deg)"><use href="#tom"/></svg>
+    <svg class="t" viewBox="0 0 100 100" style="left:31%;top:26%;width:40%;transform:rotate(6deg)"><use href="#tom"/></svg>
+    <svg class="t" viewBox="0 0 100 100" style="right:-3%;top:12%;width:31%;transform:rotate(18deg)"><use href="#tom"/></svg>
+    <svg class="t" viewBox="0 0 100 100" style="right:-8%;bottom:-12%;width:30%;transform:rotate(-30deg)"><use href="#tom"/></svg>
+  </div>
+  <div class="strip"><span>Votação on-chain</span><span>Token Turing</span><span>Projetos finais</span><span>Rede local</span></div>
+  <div class="cols">
+    <div class="rules">
+      <p>Conecte a MetaMask, veja o ranking da turma e vote nos colegas em tempo real.</p>
+      <p><b>Cada voto vale 1 ou 2 Turings.</b> Você não vota em si mesmo e só vota uma vez em cada colega.</p>
+      <p><b>A cada 10 votos que você dá, ganha 1 Turing.</b></p>
+    </div>
+    <div class="cta">
+      <small>venha e</small>
+      <div class="big">Vote</div>
+      <svg class="arrow t" viewBox="0 0 110 100" style="color:var(--red)"><use href="#arr"/></svg>
+      <button class="btn" id="connect2" type="button">Conectar carteira</button>
+      <p class="form-msg" id="connectMsg" role="alert"></p>
     </div>
   </div>
-</main>
+</section>
 
+<div id="app" hidden>
+  <section class="stats" aria-label="Resumo">
+    <div class="sticker mine"><small>Seu saldo</small><b id="stBal">0</b><small id="stName"></small></div>
+    <div class="burst on" id="burst"><small>Votação</small><b id="stStatus">-</b></div>
+    <div class="sticker"><small>Em circulação</small><b id="stSupply">0</b></div>
+    <div class="sticker"><small>Votos até o seu bônus</small><b id="stBonus">10</b></div>
+  </section>
+  <div class="grid">
+    <section class="card paper">
+      <h2 class="big">Ranking.</h2>
+      <p class="hint">Ordenado por Turings. A professora não entra na disputa.</p>
+      <ol class="rank" id="ranking"></ol>
+    </section>
+    <div class="col">
+      <section class="card vote">
+        <svg class="arrow t" viewBox="0 0 110 100" style="color:var(--butter)"><use href="#arr"/></svg>
+        <h2 class="big">Vote.</h2>
+        <p class="hint">Escolha um colega e quantos Turings ele recebe.</p>
+        <label class="field"><span>Colega</span><select id="voteTarget"></select></label>
+        <div class="lab"><span>Quantidade</span>
+          <div class="seg">
+            <input type="radio" name="qtd" id="q1" value="1" checked><label for="q1"><svg class="t" viewBox="0 0 100 100"><use href="#tom"/></svg>1</label>
+            <input type="radio" name="qtd" id="q2" value="2"><label for="q2"><svg class="t" viewBox="0 0 100 100"><use href="#tom"/></svg><svg class="t" viewBox="0 0 100 100"><use href="#tom"/></svg>2</label>
+          </div>
+        </div>
+        <button class="btn full" id="vote" type="button">Votar</button>
+        <p class="note" id="voteNote"></p>
+      </section>
+      <section class="card lime" id="adminCard">
+        <h2 class="big">Painel da professora</h2>
+        <p class="hint">Emita Turings e controle a votação.</p>
+        <label class="field"><span>Aluno</span><select id="issueTarget"></select></label>
+        <label class="field"><span>Quantidade de Turings</span><input id="issueQty" type="number" min="1" step="1" value="1"></label>
+        <button class="btn full green" id="issue" type="button">Emitir Turings</button>
+        <div class="row"><button class="btn alt" id="on" type="button">Ligar votação</button><button class="btn alt" id="off" type="button">Desligar votação</button></div>
+      </section>
+      <section class="card paper">
+        <h2 class="big">Atividade</h2>
+        <p class="hint">Votos e emissões registrados no contrato.</p>
+        <ul class="feed" id="feed"></ul>
+      </section>
+    </div>
+  </div>
+</div>
+</div>
 <div id="toasts" aria-live="polite"></div>
 
 <script>
-const HARDHAT_CHAIN_ID = 31337n;
+const HARDHAT_CHAIN_ID=31337n;
+const FALLBACK_ABI=["function owner() view returns (address)","function professor() view returns (address)","function voting() view returns (bool)","function users(string) view returns (address)","function users_reverse(address) view returns (string)","function balanceOf(address) view returns (uint256)","function totalSupply() view returns (uint256)","function votesCast(address) view returns (uint256)","function hasVote(string, string) view returns (bool)","function getCodinomes() view returns (string[])","function vote(string, uint256)","function issueToken(string, uint256)","function votingOn()","function votingOff()","event Voted(string from, string to, uint256 amount)","event TokenIssued(string codinome, address to, uint256 amount)","event VoterBonus(string codinome, address to, uint256 amount)"];
+const CONTRACT_ABI=(typeof ABI!=="undefined")?ABI:FALLBACK_ABI;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const turings=n=>String(n)==="1"?"1 Turing":`${n} Turings`;
+let provider,contract,me,myName="",isAdmin=false,profName="",voting=true,timer,busy=false;
 
-// Se o deploy.js gerar o ABI em config.js ele e usado; senao, vale este.
-const FALLBACK_ABI = [
-  "function owner() view returns (address)",
-  "function professor() view returns (address)",
-  "function voting() view returns (bool)",
-  "function users(string) view returns (address)",
-  "function users_reverse(address) view returns (string)",
-  "function balanceOf(address) view returns (uint256)",
-  "function totalSupply() view returns (uint256)",
-  "function votesCast(address) view returns (uint256)",
-  "function hasVote(string, string) view returns (bool)",
-  "function getCodinomes() view returns (string[])",
-  "function vote(string, uint256)",
-  "function issueToken(string, uint256)",
-  "function votingOn()",
-  "function votingOff()",
-  "event Voted(string from, string to, uint256 amount)",
-  "event TokenIssued(string codinome, address to, uint256 amount)",
-  "event VoterBonus(string codinome, address to, uint256 amount)"
-];
-const CONTRACT_ABI = (typeof ABI !== "undefined") ? ABI : FALLBACK_ABI;
+function toast(msg,kind="",ms=4500){const el=document.createElement("div");el.className="toast "+kind;el.textContent=msg;$("toasts").appendChild(el);setTimeout(()=>el.remove(),ms);return el}
+function errText(e){if(e&&(e.code==="ACTION_REJECTED"||e.code===4001))return "Você cancelou a operação na MetaMask.";return(e&&(e.reason||e.shortMessage||e.message))||"Erro desconhecido."}
+function showError(e){console.error(e);const m=errText(e);$("connectMsg").textContent=$("app").hidden?m:"";toast(m,"err",8000)}
 
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const turings = (n) => (String(n) === "1" ? "1 Turing" : `${n} Turings`);
+async function send(okMsg,fn){
+  if(busy)return;busy=true;setBusy(true);
+  const wait=toast("Confirme a transação na MetaMask…","",60000);
+  try{const tx=await fn();wait.textContent="Transação enviada. Aguardando confirmação…";await tx.wait();wait.remove();toast(okMsg,"ok");await refresh()}
+  catch(e){wait.remove();showError(e)}
+  finally{busy=false;setBusy(false)}
+}
+function setBusy(on){["vote","issue","on","off"].forEach(id=>{$(id).disabled=on||$(id).dataset.lock==="1"})}
 
-let provider, contract, me, myName = "", isAdmin = false, profName = "", voting = true, timer, busy = false;
-
-/* ---------- avisos ---------- */
-function toast(msg, kind = "", ms = 4500) {
-  const el = document.createElement("div");
-  el.className = "toast " + kind;
-  el.textContent = msg;
-  $("toasts").appendChild(el);
-  setTimeout(() => el.remove(), ms);
-  return el;
+async function ensureHardhatNetwork(){
+  const net=await provider.getNetwork();if(net.chainId===HARDHAT_CHAIN_ID)return;
+  try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x7a69"}]})}
+  catch(e){await window.ethereum.request({method:"wallet_addEthereumChain",params:[{chainId:"0x7a69",chainName:"Hardhat Local",rpcUrls:["http://127.0.0.1:8545"],nativeCurrency:{name:"ETH",symbol:"ETH",decimals:18}}]})}
+  provider=new ethers.BrowserProvider(window.ethereum);
 }
 
-function errText(e) {
-  if (e && (e.code === "ACTION_REJECTED" || e.code === 4001)) return "Você cancelou a operação na MetaMask.";
-  return (e && (e.reason || e.shortMessage || e.message)) || "Erro desconhecido.";
-}
-
-function showError(e) {
-  console.error(e);
-  const msg = errText(e);
-  $("connectMsg").textContent = $("app").hidden ? msg : "";
-  toast(msg, "err", 8000);
-}
-
-/* ---------- transacoes ---------- */
-async function send(okMsg, fn) {
-  if (busy) return;
-  busy = true; setBusy(true);
-  const wait = toast("Confirme a transação na MetaMask…", "", 60000);
-  try {
-    const tx = await fn();
-    wait.textContent = "Transação enviada. Aguardando confirmação…";
-    await tx.wait();
-    wait.remove();
-    toast(okMsg, "ok");
-    await refresh();
-  } catch (e) {
-    wait.remove();
-    showError(e);
-  } finally {
-    busy = false; setBusy(false);
-  }
-}
-
-function setBusy(on) {
-  ["vote", "issue", "on", "off"].forEach(id => { $(id).disabled = on || $(id).dataset.lock === "1"; });
-}
-
-/* ---------- conexao ---------- */
-async function ensureHardhatNetwork() {
-  const net = await provider.getNetwork();
-  if (net.chainId === HARDHAT_CHAIN_ID) return;
-  try {
-    await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x7a69" }] });
-  } catch (e) {
-    await window.ethereum.request({
-      method: "wallet_addEthereumChain",
-      params: [{
-        chainId: "0x7a69", chainName: "Hardhat Local",
-        rpcUrls: ["http://127.0.0.1:8545"],
-        nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }
-      }]
-    });
-  }
-  provider = new ethers.BrowserProvider(window.ethereum);
-}
-
-async function connect() {
-  $("connectMsg").textContent = "";
-
-  if (!window.ethereum) {
-    throw new Error("MetaMask não encontrada. Instale a extensão e abra a página por http://localhost (não por file://).");
-  }
-  if (typeof ADDRESS === "undefined") {
-    throw new Error("config.js não encontrado. Rode o deploy: npx hardhat run scripts/deploy.js --network localhost");
-  }
-
-  provider = new ethers.BrowserProvider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
+async function connect(){
+  $("connectMsg").textContent="";
+  if(!window.ethereum)throw new Error("MetaMask não encontrada. Instale a extensão e abra a página por http://localhost (não por file://).");
+  if(typeof ADDRESS==="undefined")throw new Error("config.js não encontrado. Rode o deploy: npx hardhat run scripts/deploy.js --network localhost");
+  provider=new ethers.BrowserProvider(window.ethereum);
+  await provider.send("eth_requestAccounts",[]);
   await ensureHardhatNetwork();
-
-  if ((await provider.getCode(ADDRESS)) === "0x") {
-    throw new Error("Não há contrato em " + ADDRESS + ". Reiniciou o hardhat node? Rode o deploy de novo.");
-  }
-
-  const signer = await provider.getSigner();
-  contract = new ethers.Contract(ADDRESS, CONTRACT_ABI, signer);
-  me = (await signer.getAddress()).toLowerCase();
-
-  const [owner, prof] = await Promise.all([contract.owner(), contract.professor()]);
-  isAdmin = [owner, prof].map(a => a.toLowerCase()).includes(me);
-  myName = await contract.users_reverse(me);
-  profName = await contract.users_reverse(prof);
-
-  $("acct").hidden = false;
-  $("acct").innerHTML = `<b>${esc(myName || "sem codinome")}</b> ${me.slice(0, 6)}…${me.slice(-4)}` + (isAdmin ? " · superusuário" : "");
-  $("net").hidden = false;
-  $("stName").textContent = myName ? myName : "conta não cadastrada";
-  $("adminCard").hidden = !isAdmin;
-  $("connect").hidden = true;
-  $("welcome").hidden = true;
-  $("app").hidden = false;
-
+  if((await provider.getCode(ADDRESS))==="0x")throw new Error("Não há contrato em "+ADDRESS+". Reiniciou o hardhat node? Rode o deploy de novo.");
+  const signer=await provider.getSigner();
+  contract=new ethers.Contract(ADDRESS,CONTRACT_ABI,signer);
+  me=(await signer.getAddress()).toLowerCase();
+  const [owner,prof]=await Promise.all([contract.owner(),contract.professor()]);
+  isAdmin=[owner,prof].map(a=>a.toLowerCase()).includes(me);
+  myName=await contract.users_reverse(me);
+  profName=await contract.users_reverse(prof);
+  $("acct").hidden=false;
+  $("acct").textContent=`${myName||"sem codinome"} ${me.slice(0,6)}…${me.slice(-4)}`+(isAdmin?" | superusuário":"");
+  $("net").hidden=false;
+  $("stName").textContent=myName||"conta não cadastrada";
+  $("adminCard").hidden=!isAdmin;
+  $("connect").hidden=true;$("welcome").hidden=true;$("app").hidden=false;
   await refresh();
-  clearInterval(timer);
-  timer = setInterval(() => refresh().catch(showError), 3000);
+  clearInterval(timer);timer=setInterval(()=>refresh().catch(showError),3000);
 }
 
-/* ---------- atualizacao da tela ---------- */
-function setOptions(sel, list) {
-  const key = list.join("|");
-  if (sel.dataset.key === key) return;
-  const atual = sel.value;
-  sel.innerHTML = list.map(n => `<option>${esc(n)}</option>`).join("");
-  if (list.includes(atual)) sel.value = atual;
-  sel.dataset.key = key;
+function setOptions(sel,list){
+  const key=list.join("|");if(sel.dataset.key===key)return;
+  const atual=sel.value;
+  sel.innerHTML=list.map(n=>`<option>${esc(n)}</option>`).join("");
+  if(list.includes(atual))sel.value=atual;
+  sel.dataset.key=key;
 }
 
-async function refresh() {
-  const [vOn, nomes, supply, myBal, myVotes] = await Promise.all([
-    contract.voting(), contract.getCodinomes(), contract.totalSupply(),
-    contract.balanceOf(me), contract.votesCast(me)
-  ]);
-  voting = vOn;
-
-  $("stBal").textContent = myBal.toString();
-  $("stSupply").textContent = supply.toString();
-  $("stBonus").textContent = String(10 - Number(myVotes % 10n));
-  const pill = $("stStatus");
-  pill.textContent = voting ? "Ativa" : "Pausada";
-  pill.className = "pill " + (voting ? "on" : "off");
-
-  const alunos = nomes.filter(n => n !== profName);
-  setOptions($("voteTarget"), alunos.filter(n => n !== myName));
-  setOptions($("issueTarget"), alunos);
-
-  const lista = await Promise.all(alunos.map(async n => ({
-    nome: n, saldo: await contract.balanceOf(await contract.users(n))
-  })));
-  lista.sort((a, b) => (b.saldo > a.saldo) - (b.saldo < a.saldo));
+async function refresh(){
+  const [vOn,nomes,supply,myBal,myVotes]=await Promise.all([contract.voting(),contract.getCodinomes(),contract.totalSupply(),contract.balanceOf(me),contract.votesCast(me)]);
+  voting=vOn;
+  $("stBal").textContent=myBal.toString();
+  $("stSupply").textContent=supply.toString();
+  $("stBonus").textContent=String(10-Number(myVotes%10n));
+  $("stStatus").textContent=voting?"Ativa":"Pausada";
+  $("burst").className="burst "+(voting?"on":"off");
+  const alunos=nomes.filter(n=>n!==profName);
+  setOptions($("voteTarget"),alunos.filter(n=>n!==myName));
+  setOptions($("issueTarget"),alunos);
+  const lista=await Promise.all(alunos.map(async n=>({nome:n,saldo:await contract.balanceOf(await contract.users(n))})));
+  lista.sort((a,b)=>(b.saldo>a.saldo)-(b.saldo<a.saldo));
   renderRanking(lista);
-
   await updateVoteState();
   await renderFeed();
 }
 
-function renderRanking(lista) {
-  if (!lista.length) { $("ranking").innerHTML = `<li class="empty">Nenhum aluno cadastrado.</li>`; return; }
-  const max = lista.reduce((m, x) => (x.saldo > m ? x.saldo : m), 1n);
-  $("ranking").innerHTML = lista.map((x, i) => {
-    const pct = Number((x.saldo * 100n) / max);
-    const eu = x.nome === myName;
-    return `<li class="${eu ? "me" : ""}">
-      <div class="pos">${i + 1}</div>
-      <div class="who"><span>${esc(x.nome)}${eu ? "<em>você</em>" : ""}</span><div class="bar"><div style="width:${pct}%"></div></div></div>
-      <div class="score">${x.saldo}<small>${x.saldo === 1n ? "Turing" : "Turings"}</small></div>
-    </li>`;
+function renderRanking(lista){
+  if(!lista.length){$("ranking").innerHTML=`<li class="empty">Nenhum aluno cadastrado.</li>`;return}
+  const max=lista.reduce((m,x)=>x.saldo>m?x.saldo:m,1n);
+  $("ranking").innerHTML=lista.map((x,i)=>{
+    const pct=Number((x.saldo*100n)/max),eu=x.nome===myName;
+    return `<li class="${i===0&&x.saldo>0n?"top ":""}${eu?"me":""}">
+      <div class="pos"><svg viewBox="0 0 100 100"><use href="#tom"/></svg><b>${i+1}</b></div>
+      <div class="nm"><strong>${esc(x.nome)}${eu?"<em>você</em>":""}</strong><div class="bar"><i style="width:${pct}%"></i></div></div>
+      <div class="sc">${x.saldo}<small>${x.saldo===1n?"Turing":"Turings"}</small></div></li>`;
   }).join("");
 }
 
-async function updateVoteState() {
-  const target = $("voteTarget").value;
-  const btn = $("vote"), note = $("voteNote");
-  let msg = "", warn = false, lock = false;
-
-  if (!myName) { msg = "Esta conta não está autorizada a votar."; warn = true; lock = true; }
-  else if (!voting) { msg = "A votação está pausada."; warn = true; lock = true; }
-  else if (!target) { msg = "Nenhum colega disponível."; lock = true; }
-  else if (await contract.hasVote(myName, target)) { msg = `Você já votou em ${target}.`; warn = true; lock = true; }
-
-  note.textContent = msg;
-  note.className = "note" + (warn ? " warn" : "");
-  btn.dataset.lock = lock ? "1" : "0";
-  btn.disabled = busy || lock;
-  $("vote").hidden = false;
+async function updateVoteState(){
+  const target=$("voteTarget").value,btn=$("vote");
+  let msg="",lock=false;
+  if(!myName){msg="Esta conta não está autorizada a votar.";lock=true}
+  else if(!voting){msg="A votação está pausada.";lock=true}
+  else if(!target){msg="Nenhum colega disponível.";lock=true}
+  else if(await contract.hasVote(myName,target)){msg=`Você já votou em ${target}.`;lock=true}
+  $("voteNote").textContent=msg;
+  btn.dataset.lock=lock?"1":"0";btn.disabled=busy||lock;
 }
 
-async function renderFeed() {
-  try {
-    const [v, t, b] = await Promise.all([
-      contract.queryFilter("Voted", 0, "latest"),
-      contract.queryFilter("TokenIssued", 0, "latest"),
-      contract.queryFilter("VoterBonus", 0, "latest")
-    ]);
-    const itens = [...v, ...t, ...b]
-      .sort((x, y) => (y.blockNumber - x.blockNumber) || (y.index - x.index))
-      .slice(0, 8)
-      .map(ev => {
-        const a = ev.args;
-        if (ev.fragment.name === "Voted") return `<b>${esc(a.from)}</b> deu ${turings(a.amount)} a <b>${esc(a.to)}</b>`;
-        if (ev.fragment.name === "TokenIssued") return `<b>${esc(a.codinome)}</b> recebeu ${turings(a.amount)} emitidos`;
-        return `<b>${esc(a.codinome)}</b> ganhou ${turings(a.amount)} de bônus por 10 votos`;
-      });
-    $("feed").innerHTML = itens.length
-      ? itens.map(t => `<li><span>${t}</span></li>`).join("")
-      : `<li class="empty" style="display:block">Nada por aqui ainda. O primeiro voto aparece nesta lista.</li>`;
-  } catch (e) { console.warn("Não foi possível ler os eventos", e); }
+async function renderFeed(){
+  try{
+    const [v,t,b]=await Promise.all([contract.queryFilter("Voted",0,"latest"),contract.queryFilter("TokenIssued",0,"latest"),contract.queryFilter("VoterBonus",0,"latest")]);
+    const itens=[...v,...t,...b].sort((x,y)=>(y.blockNumber-x.blockNumber)||(y.index-x.index)).slice(0,8).map(ev=>{
+      const a=ev.args,n=ev.fragment.name;
+      if(n==="Voted")return `<b>${esc(a.from)}</b> deu ${turings(a.amount)} a <b>${esc(a.to)}</b>`;
+      if(n==="TokenIssued")return `<b>${esc(a.codinome)}</b> recebeu ${turings(a.amount)} emitidos`;
+      return `<b>${esc(a.codinome)}</b> ganhou ${turings(a.amount)} de bônus por 10 votos`;
+    });
+    $("feed").innerHTML=itens.length?itens.map(t=>`<li><span>${t}</span></li>`).join(""):`<li style="display:block;opacity:.7">Nada por aqui ainda. O primeiro voto aparece nesta lista.</li>`;
+  }catch(e){console.warn("Não foi possível ler os eventos",e)}
 }
 
-/* ---------- acoes ---------- */
-$("connect").onclick = $("connect2").onclick = () => connect().catch(showError);
-
-$("vote").onclick = () => {
-  const qtd = document.querySelector('input[name="qtd"]:checked').value;
-  const alvo = $("voteTarget").value;
-  send(`Voto registrado: ${turings(qtd)} para ${alvo}.`, () => contract.vote(alvo, qtd));
-};
-
-$("issue").onclick = () => {
-  const alvo = $("issueTarget").value, qtd = $("issueQty").value;
-  if (!alvo || !(Number(qtd) >= 1)) { toast("Escolha um aluno e uma quantidade maior que 0.", "err"); return; }
-  send(`${turings(qtd)} emitidos para ${alvo}.`, () => contract.issueToken(alvo, qtd));
-};
-
-$("on").onclick = () => send("Votação ligada.", () => contract.votingOn());
-$("off").onclick = () => send("Votação desligada.", () => contract.votingOff());
-$("voteTarget").onchange = () => updateVoteState().catch(showError);
-
-if (window.ethereum) {
-  window.ethereum.on("accountsChanged", () => location.reload());
-  window.ethereum.on("chainChanged", () => location.reload());
-}
+$("connect").onclick=$("connect2").onclick=()=>connect().catch(showError);
+$("vote").onclick=()=>{const q=document.querySelector('input[name="qtd"]:checked').value,a=$("voteTarget").value;send(`Voto registrado: ${turings(q)} para ${a}.`,()=>contract.vote(a,q))};
+$("issue").onclick=()=>{const a=$("issueTarget").value,q=$("issueQty").value;if(!a||!(Number(q)>=1)){toast("Escolha um aluno e uma quantidade maior que 0.","err");return}send(`${turings(q)} emitidos para ${a}.`,()=>contract.issueToken(a,q))};
+$("on").onclick=()=>send("Votação ligada.",()=>contract.votingOn());
+$("off").onclick=()=>send("Votação desligada.",()=>contract.votingOff());
+$("voteTarget").onchange=()=>updateVoteState().catch(showError);
+if(window.ethereum){window.ethereum.on("accountsChanged",()=>location.reload());window.ethereum.on("chainChanged",()=>location.reload())}
 </script>
 </body>
 </html>
